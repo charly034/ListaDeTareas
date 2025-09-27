@@ -1,0 +1,108 @@
+/* ===== Reset mínimo ===== */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  background: #f7f7fb;
+  color: #111827;
+}
+
+/* ===== Layout ===== */
+main,
+.app {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+h1 {
+  margin: 0 0 16px;
+}
+
+/* ===== Formulario ===== */
+#formulario {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#formulario input[type="text"] {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+#formulario button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+}
+#formulario button:hover {
+  filter: brightness(0.95);
+}
+#formulario input:focus,
+#formulario button:focus {
+  outline: 3px solid #bfdbfe;
+  outline-offset: 2px;
+}
+
+/* ===== Lista de tareas ===== */
+#tareas {
+  display: grid;
+  gap: 10px;
+}
+.tarea {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+/* Texto de tarea */
+.tarea span {
+  line-height: 1.3;
+}
+.completada {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Botones acción */
+.tarea button {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tarea button.completar {
+  border-color: #bbf7d0;
+}
+.tarea button.eliminar {
+  border-color: #fecaca;
+}
+.tarea button:hover {
+  filter: brightness(0.97);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .tarea {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tarea .acciones {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+}
