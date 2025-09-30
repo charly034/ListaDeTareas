@@ -106,3 +106,12 @@ h1 {
     gap: 8px;
   }
 }
+.filtro {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #7c8eb4;
+  color: #fff;
+  font-weight: 600;
+}

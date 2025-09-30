@@ -1,4 +1,4 @@
-// 🧠 Modelo
+//  Modelo
 class Tarea {
   constructor(nombre, estado = "pendiente") {
     this.nombre = nombre;
@@ -9,13 +9,12 @@ class Tarea {
   }
 }
 
-// 📦 Estado
+//  Estado
 const tareas = [];
 const key = "tareas-lista";
 
-// 🔐 Persistencia
+//  Persistencia
 function guardarEnLocalStorage() {
-  // guardamos datos planos (no métodos)
   const plain = tareas.map((t) => ({ nombre: t.nombre, estado: t.estado }));
   localStorage.setItem(key, JSON.stringify(plain));
 }
@@ -24,16 +23,15 @@ function cargarDesdeLocalStorage() {
   const datos = localStorage.getItem(key);
   if (!datos) return;
   const arr = JSON.parse(datos);
-  // reconstruimos como instancias de Tarea
   arr.forEach((obj) => tareas.push(new Tarea(obj.nombre, obj.estado)));
 }
 
-// 🧩 DOM
+// DOM
 const formulario = document.getElementById("formulario");
 const tareaInput = document.getElementById("tarea");
 const tareasContainer = document.getElementById("tareas");
 
-// ➕ Agregar
+//  Agregar
 formulario.addEventListener("submit", (e) => {
   e.preventDefault();
   const nombre = tareaInput.value.trim();
@@ -45,7 +43,7 @@ formulario.addEventListener("submit", (e) => {
   mostrarTareas();
 });
 
-// 🎯 Delegación de eventos (Completar / Eliminar)
+//  (Completar / Eliminar)
 tareasContainer.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
   if (!btn) return;
@@ -62,15 +60,33 @@ tareasContainer.addEventListener("click", (e) => {
     mostrarTareas();
   }
 });
+//Filtrado
+document.querySelectorAll(".filtro").forEach((boton) => {
+  boton.addEventListener("click", () => {
+    const filtro = boton.dataset.filtro;
+    let tareasFiltradas = [];
+    if (filtro === "todas") {
+      tareasFiltradas = tareas;
+    } else if (filtro === "alfabetica") {
+      const tareasOrdenadas = [...tareas];
+      tareasFiltradas = tareasOrdenadas.sort((a, b) =>
+        a.nombre.localeCompare(b.nombre)
+      );
+    } else {
+      tareasFiltradas = tareas.filter((tarea) => tarea.estado === filtro);
+    }
+    mostrarTareas(tareasFiltradas);
+  });
+});
 
-// 📋 Render
-function mostrarTareas() {
+//  Render
+function mostrarTareas(ListadoDeTareas = tareas) {
   tareasContainer.innerHTML = "";
-  if (tareas.length === 0) {
+  if (ListadoDeTareas.length === 0) {
     tareasContainer.textContent = "No hay tareas aún.";
     return;
   }
-  tareas.forEach((tarea, index) => {
+  ListadoDeTareas.forEach((tarea, index) => {
     const div = document.createElement("div");
     div.className = "tarea";
     div.innerHTML = `
@@ -86,6 +102,6 @@ function mostrarTareas() {
   });
 }
 
-// 🚀 Inicio
+//  Inicio
 cargarDesdeLocalStorage();
-mostrarTareas();
+mostrarTareas(tareas);

@@ -13,6 +13,20 @@
         <input type="text" id="tarea" placeholder="Ingrese tarea" />
         <button type="submit">Agregar</button>
       </form>
+      <div>
+        <button type="button" class="filtro" data-filtro="todas">
+          Todas las tareas
+        </button>
+        <button type="button" class="filtro" data-filtro="completada">
+          Tareas completadas
+        </button>
+        <button type="button" class="filtro" data-filtro="pendiente">
+          Tareas pendientes
+        </button>
+        <button type="button" class="filtro" data-filtro="alfabetica">
+          Tareas alfabeticamente
+        </button>
+      </div>
       <h2>Mis tareas</h2>
       <div id="tareas" class="tareas"></div>
     </main>
