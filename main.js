@@ -24,10 +24,10 @@ class Sesion {
 
 class Tarea {
   constructor(nombre, usuario, estado = "pendiente", id = genId()) {
-    this.id = id; // id único para manipular tareas filtradas/ordenadas
+    this.id = id; // id único
     this.nombre = nombre;
     this.estado = estado; // "pendiente" | "completada"
-    this.usuario = usuario; // username del dueño
+    this.usuario = usuario; // owner (username)
   }
   toggle() {
     this.estado = this.estado === "pendiente" ? "completada" : "pendiente";
@@ -45,7 +45,8 @@ const KEY_TAREAS = "tareas-lista-v2";
 const KEY_SESSION = "sesion-usuario";
 
 // ==============================
-/** Util: id único (fallback si no hay crypto.randomUUID) */
+//  Utils
+// ==============================
 function genId() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
@@ -58,8 +59,7 @@ function genId() {
 async function cargarUsuarios() {
   const resp = await fetch("usuarios.json");
   const data = await resp.json();
-  usuarios = data.map((u) => new Usuario(u.username, u.password, u.admin));
-  // console.log("Usuarios cargados:", usuarios);
+  usuarios = data.map((u) => new Usuario(u.username, u.password, !!u.admin));
 }
 
 // ==============================
@@ -78,8 +78,9 @@ function guardarEnLocalStorage() {
 function cargarDesdeLocalStorage() {
   const datos = localStorage.getItem(KEY_TAREAS);
   if (!datos) return;
-  const arr = JSON.parse(datos);
-  tareas = arr.map((o) => new Tarea(o.nombre, o.usuario, o.estado, o.id));
+  tareas = JSON.parse(datos).map(
+    (o) => new Tarea(o.nombre, o.usuario, o.estado, o.id)
+  );
 }
 
 // ==============================
@@ -92,7 +93,7 @@ function getUsuarioActual() {
 function getTareasDeSesion() {
   const u = getUsuarioActual();
   if (!u) return [];
-  if (sesion.usuario.admin === true) return tareas; // admin ve todo
+  if (sesion?.usuario?.admin) return tareas; // admin ve todo
   return tareas.filter((t) => t.usuario === u);
 }
 
@@ -108,26 +109,41 @@ const iniciosesion = document.getElementById("sesion");
 const bloquePrincipal = document.getElementById("BloquePrincipal");
 const btnCierre = document.getElementById("cierre");
 const AsignarUsuario = document.getElementById("AsignarUsuario");
+const titulo = document.getElementById("titulo");
 
 // Inputs login
 const inputUser = document.getElementById("usuario");
 const inputPass = document.getElementById("clave");
 
 // ==============================
-//  Login / Logout
+//  UI helpers
 // ==============================
+function setTitulo() {
+  if (!titulo) return;
+  const isAdmin = !!(sesion && sesion.usuario && sesion.usuario.admin);
+  titulo.textContent = isAdmin ? "Todas las tareas" : "Mis tareas";
+}
+
 function mostrarUIAutenticado() {
   if (iniciosesion) iniciosesion.style.display = "none";
   if (bloquePrincipal) bloquePrincipal.style.display = "block";
   if (btnCierre) btnCierre.style.display = "block";
+
+  setTitulo();
+
   if (sesion.usuario.admin === true) {
+    // evitar duplicados
+    AsignarUsuario.innerHTML =
+      '<option value="">Seleccione un usuario para la tarea</option>';
     AsignarUsuario.style.display = "block";
     usuarios.forEach((u) => {
       const option = document.createElement("option");
       option.value = u.username;
-      option.textContent = u.username;
+      option.textContent = u.username + (u.admin ? " (admin)" : "");
       AsignarUsuario.appendChild(option);
     });
+  } else {
+    AsignarUsuario.style.display = "none";
   }
 }
 
@@ -135,16 +151,19 @@ function mostrarUINoAutenticado() {
   if (iniciosesion) iniciosesion.style.display = "block";
   if (bloquePrincipal) bloquePrincipal.style.display = "none";
   if (btnCierre) btnCierre.style.display = "none";
+  if (titulo) titulo.textContent = "Inicia sesión para ver tus tareas";
 }
 
 function postLoginInit() {
-  // Persisto la sesión y muestro UI
   localStorage.setItem(KEY_SESSION, sesion.usuario.username);
   mostrarUIAutenticado();
-  // Render inicial para el usuario actual
+  setTitulo();
   mostrarTareas();
 }
 
+// ==============================
+//  Login / Logout (expuestas global)
+// ==============================
 function iniciarsesion() {
   const username = inputUser?.value?.trim() || "";
   const password = inputPass?.value || "";
@@ -161,15 +180,9 @@ function iniciarsesion() {
       text: "Has iniciado sesión correctamente.",
       icon: "success",
     });
-    // console.log("Inicio de sesión exitoso");
     postLoginInit();
-    console.log(`Sesión iniciada como ${usuario.admin}`);
-    if (sesion.usuario.admin === true) {
-      console.log(" (administrador)");
-    }
-    console.log(usuarios);
+    console.log(`Sesión iniciada. Admin: ${usuario.admin ? "sí" : "no"}`);
   } else {
-    // console.log("Credenciales inválidas");
     Swal.fire({
       title: "Error",
       text: "Nombre de usuario o contraseña incorrectos.",
@@ -185,8 +198,12 @@ function cerrarSesion() {
   localStorage.removeItem(KEY_SESSION);
   mostrarUINoAutenticado();
   AsignarUsuario.style.display = "none";
-  tareasContainer.innerHTML = ""; // limpiar vista
+  if (tareasContainer) tareasContainer.innerHTML = "";
 }
+
+// Exponer para que los botones onclick del HTML la encuentren
+window.iniciarsesion = iniciarsesion;
+window.cerrarSesion = cerrarSesion;
 
 // ==============================
 //  Alta / edición / borrado
@@ -194,26 +211,32 @@ function cerrarSesion() {
 if (formulario) {
   formulario.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (!sesion) return;
+
     const nombre = tareaInput.value.trim();
+    if (!nombre) return;
+
+    // Owner según rol:
     let usuarioTarea = sesion.usuario.username;
-    if (!nombre || !sesion) return;
-    if (AsignarUsuario.value === "" && sesion.usuario.admin === true) {
-      Swal.fire({
-        title: "Error",
-        text: "Por favor, seleccione un usuario para asignar la tarea.",
-        icon: "error",
-      });
-      return;
-    }
-    // ✅ asociar tarea al usuario logueado
     if (sesion.usuario.admin === true) {
+      if (!AsignarUsuario.value) {
+        Swal.fire({
+          title: "Error",
+          text: "Seleccione un usuario para asignar la tarea.",
+          icon: "error",
+        });
+        return;
+      }
       usuarioTarea = AsignarUsuario.value;
-      console.log("Tarea asignada a:", usuarioTarea);
     }
+
     const t = new Tarea(nombre, usuarioTarea);
     tareas.push(t);
     guardarEnLocalStorage();
     formulario.reset();
+    // Para admins, no resetear el select; mantener la asignación actual si querés:
+    if (sesion.usuario.admin === true) AsignarUsuario.value = usuarioTarea;
+
     mostrarTareas();
   });
 }
@@ -239,20 +262,21 @@ if (tareasContainer) {
         showCancelButton: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          Swal.fire({
-            title:
-              tareas[idx].estado === "pendiente" ? "Completada" : "Deshecha",
-            text:
-              tareas[idx].estado === "pendiente"
-                ? "La tarea se marcará como completada."
-                : "La tarea se marcará como pendiente.",
-          });
           tareas[idx].toggle();
           guardarEnLocalStorage();
           mostrarTareas();
+
+          Swal.fire({
+            title:
+              tareas[idx].estado === "completada" ? "Completada" : "Deshecha",
+            icon: "success",
+            timer: 900,
+            showConfirmButton: false,
+          });
         }
       });
     }
+
     if (btn.classList.contains("eliminar")) {
       Swal.fire({
         title: "¿Eliminar tarea?",
@@ -273,7 +297,7 @@ if (tareasContainer) {
             title: "Eliminada",
             text: "La tarea ha sido eliminada.",
             icon: "success",
-            timer: 1500,
+            timer: 1200,
             showConfirmButton: false,
           });
         }
@@ -283,7 +307,7 @@ if (tareasContainer) {
 }
 
 // ==============================
-//  Filtros (botones con clase .filtro)
+//  Filtros
 // ==============================
 document.querySelectorAll(".filtro").forEach((boton) => {
   boton.addEventListener("click", () => {
@@ -324,31 +348,31 @@ function mostrarTareas(listado = getTareasDeSesion()) {
     const div = document.createElement("div");
     div.className = "tarea";
     div.innerHTML = `
-      <span class="${
-        t.estado === "completar" || t.estado === "completada"
-          ? "completada"
-          : ""
-      }">
+      <span class="${t.estado === "completada" ? "completada" : ""}">
         <strong>Tarea:</strong> ${t.nombre}
       </span>
       <span class="usuario"><strong>Ejecutada por:</strong> ${t.usuario}</span>
-      <button class="completar" data-id="${t.id}">
-        ${t.estado === "pendiente" ? "Completar" : "Deshacer"}
-      </button>
-      <button class="eliminar" style="${
-        sesion.usuario.admin === true ? "" : "display: none;"
-      }" data-id="${t.id}">Eliminar</button>
+      <div class="acciones">
+        <button class="completar" data-id="${t.id}">
+          ${t.estado === "pendiente" ? "Completar" : "Deshacer"}
+        </button>
+        <button class="eliminar" style="${
+          sesion.usuario.admin === true ? "" : "display:none;"
+        }" data-id="${t.id}">
+          Eliminar
+        </button>
+      </div>
     `;
     tareasContainer.appendChild(div);
   });
 }
 
 // ==============================
-//  Boot: cargar datos y reanudar sesión
+//  Boot
 // ==============================
 (async function init() {
-  await cargarUsuarios(); // 👍 esperamos usuarios antes de loguear
-  cargarDesdeLocalStorage(); // carga todas las tareas (de todos los usuarios)
+  await cargarUsuarios();
+  cargarDesdeLocalStorage();
 
   // Reanudar sesión si existía
   const lastUser = localStorage.getItem(KEY_SESSION);
@@ -358,11 +382,13 @@ function mostrarTareas(listado = getTareasDeSesion()) {
       sesion = new Sesion(usuario);
       sesion.iniciar();
       mostrarUIAutenticado();
+      setTitulo();
       mostrarTareas();
       return;
     } else {
       localStorage.removeItem(KEY_SESSION);
     }
   }
+
   mostrarUINoAutenticado();
 })();
