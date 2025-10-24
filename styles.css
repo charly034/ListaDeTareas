@@ -115,3 +115,16 @@ h1 {
   color: #fff;
   font-weight: 600;
 }
+#BloquePrincipal {
+  display: none;
+}
+#cierre {
+  display: none;
+}
+#sesion {
+  text-align: center;
+  margin-top: 100px;
+}
+#AsignarUsuario {
+  display: none;
+}

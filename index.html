@@ -5,31 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lista de tareas</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
   </head>
   <body>
     <main class="container">
-      <h1>Lista de tareas</h1>
-      <form id="formulario" autocomplete="off">
-        <input type="text" id="tarea" placeholder="Ingrese tarea" />
-        <button type="submit">Agregar</button>
-      </form>
-      <div>
-        <button type="button" class="filtro" data-filtro="todas">
-          Todas las tareas
-        </button>
-        <button type="button" class="filtro" data-filtro="completada">
-          Tareas completadas
-        </button>
-        <button type="button" class="filtro" data-filtro="pendiente">
-          Tareas pendientes
-        </button>
-        <button type="button" class="filtro" data-filtro="alfabetica">
-          Tareas alfabeticamente
-        </button>
+      <h1>Lista de Tareas Grupales</h1>
+      <div id="sesion">
+        <h2>Inicia sesión para continuar</h2>
+        <input type="text" id="usuario" placeholder="Usuario" />
+        <input type="password" id="clave" placeholder="Contraseña" />
+        <button onclick="iniciarsesion()">Ingresar</button>
+        <p id="mensaje"></p>
       </div>
-      <h2>Mis tareas</h2>
-      <div id="tareas" class="tareas"></div>
+      <div id="cierre">
+        <button onclick="cerrarSesion()">cerrar sesión</button>
+      </div>
+      <div id="BloquePrincipal">
+        <h1>Lista de tareas</h1>
+        <form id="formulario" autocomplete="off">
+          <input type="text" id="tarea" placeholder="Ingrese tarea" />
+          <select
+            name="AsignarUsuario"
+            id="AsignarUsuario"
+            aria-label="Seleccionar usuario"
+          >
+            <option value="">Seleccione un usuario para la tarea</option>
+          </select>
+          <button type="submit">Agregar</button>
+        </form>
+        <div>
+          <button type="button" class="filtro" data-filtro="todas">
+            Todas las tareas
+          </button>
+          <button type="button" class="filtro" data-filtro="completada">
+            Tareas completadas
+          </button>
+          <button type="button" class="filtro" data-filtro="pendiente">
+            Tareas pendientes
+          </button>
+          <button type="button" class="filtro" data-filtro="alfabetica">
+            Tareas alfabeticamente
+          </button>
+        </div>
+        <h2 id="titulo">TAREAS</h2>
+        <div id="tareas" class="tareas"></div>
+      </div>
     </main>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="main.js"></script>
   </body>
 </html>
